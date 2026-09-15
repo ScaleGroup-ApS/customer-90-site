@@ -16,6 +16,9 @@ concurrency:
 jobs:
   build-and-push:
     name: Build and Push
+    # This site has no active namespace or domain. Set the repository Actions
+    # variable DEPLOYMENT_ENABLED=true only after provisioning it for service.
+    if: vars.DEPLOYMENT_ENABLED == 'true'
     runs-on: ubuntu-latest
     outputs:
       short-sha: ${{ steps.meta.outputs.short-sha }}
@@ -87,6 +90,16 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
+
+      - name: Require ALTCHA deployment prerequisites
+        run: |
+          if ! kubectl get secret contact-altcha -n "$NAMESPACE" \
+            -o jsonpath='{.data.ALTCHA_SECRET_KEY}' | grep -q .; then
+            echo "::error::Provision contact-altcha/ALTCHA_SECRET_KEY in namespace $NAMESPACE before deploying."
+            exit 1
+          fi
+          kubectl label namespace "$NAMESPACE" \
+            scaleweb.dk/altcha-client=true --overwrite
 
       - name: Prepare manifests
         env:
