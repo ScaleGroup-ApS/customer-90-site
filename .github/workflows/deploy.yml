@@ -16,6 +16,9 @@ concurrency:
 jobs:
   build-and-push:
     name: Build and Push
+    # This site has no active namespace or domain. Set the repository Actions
+    # variable DEPLOYMENT_ENABLED=true only after provisioning it for service.
+    if: vars.DEPLOYMENT_ENABLED == 'true'
     runs-on: ubuntu-latest
     outputs:
       short-sha: ${{ steps.meta.outputs.short-sha }}
